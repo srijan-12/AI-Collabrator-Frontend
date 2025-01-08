@@ -1,6 +1,7 @@
 import axios from "../config/axios"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLocation, useParams } from "react-router-dom"
+import { initializeSocket } from "../config/socket"
 
 export const Project = () =>{
     const {id} = useParams()
@@ -12,6 +13,9 @@ export const Project = () =>{
     const [message, setMessage] = useState(null)
     const [projectSucess, setProjectSucess] = useState(false)
     const [Errorr, setErrorr] = useState(null)
+    const[messageInput, setMessageInput] = useState('')
+    const socketRef = useRef(null)
+    let socketInstance;
     const handleSelectUser = (userId) => {
         if (selectedUsers.includes(userId)) {
             setSelectedUsers(selectedUsers.filter((id) => id !== userId));
@@ -42,7 +46,11 @@ export const Project = () =>{
     const blankImgSRC = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
 
 
+    
+
+
     useEffect(()=>{
+
         async function getProject() {
             const result = await axios.get(`/project/get-project/${id}`, {withCredentials:true})
             // console.log(result?.data?.project)
@@ -58,8 +66,20 @@ export const Project = () =>{
         }
         getProject()
         getAllUsers()
-
+        socketInstance = initializeSocket(id)
+        socketRef.current = socketInstance
+        socketInstance.on('recieve-message', ({data, user}) =>
+            console.log(data, `sent by`, user)
+        )
+        
     },[showModal])
+
+
+    const handleButtonClick = async() =>{
+        // console.log(socketRef?.current.query?.projectId)
+        socketRef?.current.emit('send-message', messageInput)
+        setMessageInput('')
+    }
 
     return (
         <>
@@ -171,8 +191,8 @@ export const Project = () =>{
 
                         </div>
                         <div className="div flex flex-row">
-                            <input type="text" name="" className='flex flex-grow border-none outline-none px-2 py-4' placeholder="Enter your message"/>
-                            <button className="flex p-2 px-4 bg-[#04d68c]"><i className="fa-solid fa-circle-right text-4xl"></i></button>
+                            <input type="text" name="" className='flex flex-grow border-none outline-none px-2 py-4' placeholder="Enter your message" value={messageInput} onChange={(e)=>setMessageInput(e.target.value)}/>
+                            <button className="flex p-2 px-4 bg-[#04d68c]" onClick={handleButtonClick}><i className="fa-solid fa-circle-right text-4xl"></i></button>
                         </div>
 
 
