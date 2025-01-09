@@ -1,10 +1,8 @@
 import axios from "../config/axios"
 import { useEffect, useRef, useState } from "react"
-import { data, useLocation, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { initializeSocket } from "../config/socket"
 import { useDispatch, useSelector } from "react-redux"
-import appStore from "../store/appStore"
-import { use } from "react"
 import { adduser } from "../store/userSlice"
 
 export const Project = () =>{
@@ -17,7 +15,7 @@ export const Project = () =>{
     const [message, setMessage] = useState(null)
     const [projectSucess, setProjectSucess] = useState(false)
     const [Errorr, setErrorr] = useState(null)
-    const[messageInput, setMessageInput] = useState('')
+    const[messageInput, setMessageInput] = useState('123')
     const socketRef = useRef(null)
     const[allMsg, setAllMsg] = useState([])
     let socketInstance;
@@ -92,7 +90,7 @@ export const Project = () =>{
 
     const handleButtonClick = async() =>{
         socketRef?.current.emit('send-message', {messageInput, messageSender : user})
-        setMessageInput('')
+        // setMessageInput('')
         setAllMsg((pre)=>[...pre, {messageInput, messageSender : user}])
     }
 
@@ -150,7 +148,7 @@ export const Project = () =>{
             )}
 
 
-            <main className="main h-screen w-screen">
+            <main className="main h-screen w-screen overflow-hidden">
 
 
                 <section className="left h-screen w-[30%] min-w-[418px] flex flex-col relative">
@@ -171,7 +169,7 @@ export const Project = () =>{
                             </button>
                         </header>
 
-                        <div className="messagebox flex flex-col flex-grow bg-[url('https://images.template.net/375896/Instagram-Chat-Background-edit-online-2.jpg')] bg-cover bg-center p-2">
+                        <div className="messagebox flex flex-col flex-grow bg-[url('https://images.template.net/375896/Instagram-Chat-Background-edit-online-2.jpg')] bg-cover bg-center p-2 overflow-auto">
                         
 
                         {allMsg.length>0 ? (
