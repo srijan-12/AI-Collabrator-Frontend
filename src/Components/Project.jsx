@@ -1,7 +1,11 @@
 import axios from "../config/axios"
 import { useEffect, useRef, useState } from "react"
-import { useLocation, useParams } from "react-router-dom"
+import { data, useLocation, useParams } from "react-router-dom"
 import { initializeSocket } from "../config/socket"
+import { useDispatch, useSelector } from "react-redux"
+import appStore from "../store/appStore"
+import { use } from "react"
+import { adduser } from "../store/userSlice"
 
 export const Project = () =>{
     const {id} = useParams()
@@ -15,7 +19,11 @@ export const Project = () =>{
     const [Errorr, setErrorr] = useState(null)
     const[messageInput, setMessageInput] = useState('')
     const socketRef = useRef(null)
+    const[allMsg, setAllMsg] = useState([])
     let socketInstance;
+
+    const dispatch = useDispatch()
+    const user = useSelector(appStore=>appStore.user?.payload)
     const handleSelectUser = (userId) => {
         if (selectedUsers.includes(userId)) {
             setSelectedUsers(selectedUsers.filter((id) => id !== userId));
@@ -46,11 +54,17 @@ export const Project = () =>{
     const blankImgSRC = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
 
 
+
+    const recieveMessageAppend = (data) =>{
+        setAllMsg((pre)=>[...pre, data])
+    }
     
 
-
     useEffect(()=>{
-
+        async function getCurrUser() {
+            const currUser = await axios.get('/user/profile', {withCredentials:true})
+            dispatch(adduser(currUser?.data?.result))
+        }
         async function getProject() {
             const result = await axios.get(`/project/get-project/${id}`, {withCredentials:true})
             // console.log(result?.data?.project)
@@ -66,19 +80,20 @@ export const Project = () =>{
         }
         getProject()
         getAllUsers()
+        getCurrUser()
         socketInstance = initializeSocket(id)
         socketRef.current = socketInstance
-        socketInstance.on('recieve-message', ({data, user}) =>
-            console.log(data, `sent by`, user)
+        socketInstance.on('recieve-message', ({data, messageSender}) =>
+            recieveMessageAppend({data,messageSender})
         )
         
     },[showModal])
 
 
     const handleButtonClick = async() =>{
-        // console.log(socketRef?.current.query?.projectId)
-        socketRef?.current.emit('send-message', messageInput)
+        socketRef?.current.emit('send-message', {messageInput, messageSender : user})
         setMessageInput('')
+        setAllMsg((pre)=>[...pre, {messageInput, messageSender : user}])
     }
 
     return (
@@ -158,36 +173,54 @@ export const Project = () =>{
 
                         <div className="messagebox flex flex-col flex-grow bg-[url('https://images.template.net/375896/Instagram-Chat-Background-edit-online-2.jpg')] bg-cover bg-center p-2">
                         
-                        <div className="chat chat-start h-fit">
-                            <div className="chat-image avatar">
-                                <div className="w-10 rounded-full">
-                                <img
-                                    alt="Tailwind CSS chat bubble component"
-                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                                </div>
-                            </div>
-                            <div className="chat-header">
-                                Obi-Wan Kenobi
-                                <time className="text-xs opacity-50">12:45</time>
-                            </div>
-                            <div className="chat-bubble">You were the Chosen One!</div>
-                            <div className="chat-footer opacity-50">Delivered</div>
-                        </div>
-                        <div className="chat chat-end h-fit">
-                            <div className="chat-image avatar">
-                                <div className="w-10 rounded-full">
-                                <img
-                                    alt="Tailwind CSS chat bubble component"
-                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                                </div>
-                            </div>
-                            <div className="chat-header">
-                                Anakin
-                                <time className="text-xs opacity-50">12:46</time>
-                            </div>
-                            <div className="chat-bubble">I hate you!</div>
-                            <div className="chat-footer opacity-50">Seen at 12:46</div>
-                        </div>
+
+                        {allMsg.length>0 ? (
+                            console.log(allMsg),
+                            allMsg.map((eachMsg, index)=>{
+
+                                if(eachMsg.messageSender?._id ==(user?._id)){
+                                    return (
+                                        <div className="chat chat-end h-fit" key={index}>
+                                            <div className="chat-image avatar">
+                                                <div className="w-10 rounded-full">
+                                                <img
+                                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                                                </div>
+                                            </div>
+                                            <div className="chat-header">
+                                                {eachMsg.messageSender?.email}
+                                                <time className="text-xs opacity-50">12:46</time>
+                                            </div>
+                                            <div className="chat-bubble">{eachMsg.messageInput}</div>
+                                        </div>
+                                    )
+                                }else{
+                                    return(
+                                    <div className="chat chat-start h-fit" key={index}>
+                                        <div className="chat-image avatar">
+                                            <div className="w-10 rounded-full">
+                                                <img
+                                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="chat-header">
+                                        {eachMsg.messageSender?.email}
+                                            <time className="text-xs opacity-50">12:45</time>
+                                        </div>
+                                        <div className="chat-bubble">{eachMsg.data}</div>
+                                    </div>)
+                                }
+                            })
+                        ):null}
+
+
+                        
+
+
+                            
+
+                        
 
                         </div>
                         <div className="div flex flex-row">
