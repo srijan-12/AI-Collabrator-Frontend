@@ -5,6 +5,8 @@ import { initializeSocket } from "../config/socket"
 import { useDispatch, useSelector } from "react-redux"
 import { adduser } from "../store/userSlice"
 import ReactMarkdown from 'react-markdown';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
 export const Project = () =>{
     const {id} = useParams()
     const[currProject, setCurrProject] = useState(null)
@@ -18,6 +20,7 @@ export const Project = () =>{
     const[messageInput, setMessageInput] = useState('@ai how to connect to mongoose')
     const socketRef = useRef(null)
     const[allMsg, setAllMsg] = useState([])
+    const markdownRef = useRef(null);
     let socketInstance;
 
     const dispatch = useDispatch()
@@ -87,6 +90,15 @@ export const Project = () =>{
         
     },[showModal])
 
+
+    useEffect(() => {
+        if (markdownRef.current) {
+            const codeBlocks = markdownRef.current.querySelectorAll("pre code");
+            codeBlocks.forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+    }, [allMsg]);
 
     const handleButtonClick = async() =>{
         socketRef?.current.emit('send-message', {messageInput, messageSender : user})
@@ -206,7 +218,7 @@ export const Project = () =>{
                                             {eachMsg.messageSender?.email}
                                                 <time className="text-xs opacity-50">12:45</time>
                                             </div>
-                                            <div className="overflow-auto px-2 w-full bg-slate-900 text-white py-2 rounded"><ReactMarkdown>{eachMsg.data}</ReactMarkdown></div>
+                                            <div className="overflow-auto px-2 w-full bg-slate-900 text-white py-2 rounded language-javascript" ref={markdownRef}><ReactMarkdown>{eachMsg.data}</ReactMarkdown></div>
                                         </div>)
                                 }else{
                                     return(
