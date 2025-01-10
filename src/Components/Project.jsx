@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom"
 import { initializeSocket } from "../config/socket"
 import { useDispatch, useSelector } from "react-redux"
 import { adduser } from "../store/userSlice"
-
+import ReactMarkdown from 'react-markdown';
 export const Project = () =>{
     const {id} = useParams()
     const[currProject, setCurrProject] = useState(null)
@@ -15,7 +15,7 @@ export const Project = () =>{
     const [message, setMessage] = useState(null)
     const [projectSucess, setProjectSucess] = useState(false)
     const [Errorr, setErrorr] = useState(null)
-    const[messageInput, setMessageInput] = useState('123')
+    const[messageInput, setMessageInput] = useState('@ai how to connect to mongoose')
     const socketRef = useRef(null)
     const[allMsg, setAllMsg] = useState([])
     let socketInstance;
@@ -192,6 +192,22 @@ export const Project = () =>{
                                             <div className="chat-bubble">{eachMsg.messageInput}</div>
                                         </div>
                                     )
+                                }else if(eachMsg.messageSender?._id ==('ai')){
+                                    {console.log(eachMsg)}
+                                    return(
+                                        <div className="chat chat-start h-fit mt-4 mb-4" key={index}>
+                                            <div className="chat-image avatar">
+                                                <div className="w-10 rounded-full">
+                                                <img
+                                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                                                </div>
+                                            </div>
+                                            <div className="chat-header">
+                                            {eachMsg.messageSender?.email}
+                                                <time className="text-xs opacity-50">12:45</time>
+                                            </div>
+                                            <div className="overflow-auto px-2 w-full bg-slate-900 text-white py-2 rounded"><ReactMarkdown>{eachMsg.data}</ReactMarkdown></div>
+                                        </div>)
                                 }else{
                                     return(
                                     <div className="chat chat-start h-fit" key={index}>
