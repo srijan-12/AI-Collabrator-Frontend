@@ -17,10 +17,21 @@ export const Project = () =>{
     const [message, setMessage] = useState(null)
     const [projectSucess, setProjectSucess] = useState(false)
     const [Errorr, setErrorr] = useState(null)
-    const[messageInput, setMessageInput] = useState('@ai how to connect to mongoose')
+    const[messageInput, setMessageInput] = useState('@ai give a basic setup for auth using bcrypt')
     const socketRef = useRef(null)
     const[allMsg, setAllMsg] = useState([])
     const markdownRef = useRef(null);
+    const[fileTree, setFileTree] = useState({
+        "app.js" : {
+            content : `some content here`
+        },
+        "package.json" : {
+            content : `{
+                'name' : 'some name'
+            }`
+        }
+    })
+    const[code, setCode] = useState(null)
     let socketInstance;
 
     const dispatch = useDispatch()
@@ -98,6 +109,12 @@ export const Project = () =>{
                 hljs.highlightElement(block);
             });
         }
+
+        allMsg.forEach((eachMsg) => {
+            if (eachMsg?.messageSender?._id === "ai" && eachMsg?.data?.fileTree) {
+                setFileTree(eachMsg?.data?.fileTree);
+            }
+        });
     }, [allMsg]);
 
     const handleButtonClick = async() =>{
@@ -106,6 +123,10 @@ export const Project = () =>{
         setAllMsg((pre)=>[...pre, {messageInput, messageSender : user}])
     }
 
+    const handleFileUpdate= async(fileContent)=>{
+        console.log(fileContent)
+        setCode(fileContent)
+    }
     return (
         <>
         {<div className="toast toast-center toast-top z-[10]">
@@ -160,7 +181,7 @@ export const Project = () =>{
             )}
 
 
-            <main className="main h-screen w-screen overflow-hidden">
+            <main className="main h-screen w-screen overflow-hidden flex">
 
 
                 <section className="left h-screen w-[30%] min-w-[418px] flex flex-col relative">
@@ -188,7 +209,7 @@ export const Project = () =>{
                             console.log(allMsg),
                             allMsg.map((eachMsg, index)=>{
 
-                                if(eachMsg.messageSender?._id ==(user?._id)){
+                                if(eachMsg?.messageSender?._id ==(user?._id)){
                                     return (
                                         <div className="chat chat-end h-fit" key={index}>
                                             <div className="chat-image avatar">
@@ -198,16 +219,15 @@ export const Project = () =>{
                                                 </div>
                                             </div>
                                             <div className="chat-header">
-                                                {eachMsg.messageSender?.email}
+                                                {eachMsg?.messageSender?.email}
                                                 <time className="text-xs opacity-50">12:46</time>
                                             </div>
-                                            <div className="chat-bubble">{eachMsg.messageInput}</div>
+                                            <div className="chat-bubble">{eachMsg?.messageInput}</div>
                                         </div>
                                     )
-                                }else if(eachMsg.messageSender?._id ==('ai')){
-                                    {console.log(eachMsg)}
+                                }else if(eachMsg?.messageSender?._id ==('ai')){
                                     return(
-                                        <div className="chat chat-start h-fit mt-4 mb-4" key={index}>
+                                        <div className="chat chat-start h-fit mt-4 mb-4">
                                             <div className="chat-image avatar">
                                                 <div className="w-10 rounded-full">
                                                 <img
@@ -215,10 +235,16 @@ export const Project = () =>{
                                                 </div>
                                             </div>
                                             <div className="chat-header">
-                                            {eachMsg.messageSender?.email}
+                                            {eachMsg?.messageSender?.email}
                                                 <time className="text-xs opacity-50">12:45</time>
                                             </div>
-                                            <div className="overflow-auto px-2 w-full bg-slate-900 text-white py-2 rounded language-javascript" ref={markdownRef}><ReactMarkdown>{eachMsg.data}</ReactMarkdown></div>
+                                            <div 
+                                                className="overflow-auto px-2 w-full bg-slate-900 text-white py-2 rounded language-javascript" 
+                                                ref={markdownRef}
+                                                >
+                                                    <ReactMarkdown>{eachMsg?.data?.text}</ReactMarkdown>
+                                             </div>
+
                                         </div>)
                                 }else{
                                     return(
@@ -239,14 +265,6 @@ export const Project = () =>{
                                 }
                             })
                         ):null}
-
-
-                        
-
-
-                            
-
-                        
 
                         </div>
                         <div className="div flex flex-row">
@@ -278,6 +296,25 @@ export const Project = () =>{
                                 
                             </div>
                         </div>
+                </section>
+
+                <section className="right h-screen bg-red-200 w-[70%] flex">
+                    <div className="explorer h-screen w-[20%] bg-blue-100">
+                        {fileTree && Object.keys(fileTree).map((treeKey, index)=>{
+                            return <div className="file-tree" key={index} onClick={()=>handleFileUpdate(fileTree[treeKey].file.contents)}>
+                                        <div className="tree-element bg-slate-600 p-2 w-[98%] rounded my-1 mx-auto cursor-pointer hover:bg-slate-800 text-white text-sm">
+                                            <p>{treeKey}</p>
+                                        </div>
+                                    </div>
+                        })}
+                    </div>
+                    {code && (
+                        <div className="code-view flex-grow bg-gray-800 text-white overflow-auto" ref={markdownRef}>
+                            <pre>
+                                <code>{code}</code>
+                            </pre>
+                        </div>
+                    )}
                 </section>
             </main>
         </>
