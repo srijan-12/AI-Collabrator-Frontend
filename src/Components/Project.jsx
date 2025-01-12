@@ -21,16 +21,7 @@ export const Project = () =>{
     const socketRef = useRef(null)
     const[allMsg, setAllMsg] = useState([])
     const markdownRef = useRef(null);
-    const[fileTree, setFileTree] = useState({
-        "app.js" : {
-            content : `some content here`
-        },
-        "package.json" : {
-            content : `{
-                'name' : 'some name'
-            }`
-        }
-    })
+    const[fileTree, setFileTree] = useState({})
     const[code, setCode] = useState(null)
     let socketInstance;
 
@@ -111,8 +102,12 @@ export const Project = () =>{
         }
 
         allMsg.forEach((eachMsg) => {
-            if (eachMsg?.messageSender?._id === "ai" && eachMsg?.data?.fileTree) {
-                setFileTree(eachMsg?.data?.fileTree);
+            if (eachMsg?.messageSender?._id === "ai"){
+                if(eachMsg?.data?.fileTree){
+                    setFileTree(eachMsg?.data?.fileTree);
+                }else if(eachMsg?.data?.code?.fileTree){
+                    setFileTree(eachMsg?.data?.code?.fileTree);
+                }
             }
         });
     }, [allMsg]);
@@ -242,7 +237,7 @@ export const Project = () =>{
                                                 className="overflow-auto px-2 w-full bg-slate-900 text-white py-2 rounded language-javascript" 
                                                 ref={markdownRef}
                                                 >
-                                                    <ReactMarkdown>{eachMsg?.data?.text}</ReactMarkdown>
+                                                   {eachMsg?.data? <ReactMarkdown>{eachMsg?.data?.text}</ReactMarkdown> : <ReactMarkdown>Something went wrong. Please try again</ReactMarkdown>}
                                              </div>
 
                                         </div>)
@@ -298,10 +293,11 @@ export const Project = () =>{
                         </div>
                 </section>
 
-                <section className="right h-screen bg-red-200 w-[70%] flex">
-                    <div className="explorer h-screen w-[20%] bg-blue-100">
+                <section className="right h-screen bg-slate-400 w-[70%] flex">
+                    <div className="explorer h-screen w-[20%] bg-slate-200">
                         {fileTree && Object.keys(fileTree).map((treeKey, index)=>{
-                            return <div className="file-tree" key={index} onClick={()=>handleFileUpdate(fileTree[treeKey].file.contents)}>
+                            const parameter = fileTree[treeKey].file?.contents || fileTree[treeKey].file?.mainItem
+                            return <div className="file-tree" key={index} onClick={()=>handleFileUpdate(parameter)}>
                                         <div className="tree-element bg-slate-600 p-2 w-[98%] rounded my-1 mx-auto cursor-pointer hover:bg-slate-800 text-white text-sm">
                                             <p>{treeKey}</p>
                                         </div>
